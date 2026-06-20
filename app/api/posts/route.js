@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import connectDB from '../../utils/db';
 import Post from '../../models/Post';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/posts - Fetch posts with pagination
 export async function GET(request) {
   try {
