@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import connectDB from '../../../../utils/db';
 import Post from '../../../../models/Post';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request, { params }) {
   try {
     await connectDB();
