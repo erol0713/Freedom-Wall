@@ -4,7 +4,7 @@ import Post from '../../models/Post';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/posts - Fetch posts with pagination
+// GET /api/posts - Fetch posts with pagination and mood filter
 export async function GET(request) {
   try {
     await connectDB();
@@ -12,15 +12,22 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
+    const mood = searchParams.get('mood');
     const skip = (page - 1) * limit;
 
+    // Build filter
+    const filter = {};
+    if (mood && mood !== 'all') {
+      filter.mood = mood;
+    }
+
     const [posts, total] = await Promise.all([
-      Post.find({})
+      Post.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Post.countDocuments({}),
+      Post.countDocuments(filter),
     ]);
 
     const hasMore = skip + posts.length < total;
@@ -48,7 +55,20 @@ export async function POST(request) {
     await connectDB();
 
     const body = await request.json();
-    const { content, contentType, songId, songName, songArtist, songCover, songPreviewUrl, toAlias, fromAlias } = body;
+    const {
+      content,
+      contentType,
+      mood,
+      isAnonymous,
+      userHandle,
+      songId,
+      songName,
+      songArtist,
+      songCover,
+      songPreviewUrl,
+      toAlias,
+      fromAlias,
+    } = body;
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
@@ -67,6 +87,9 @@ export async function POST(request) {
     const post = await Post.create({
       content: content.trim(),
       contentType: contentType || 'thought',
+      mood: mood || '💭',
+      isAnonymous: isAnonymous !== undefined ? isAnonymous : true,
+      userHandle: !isAnonymous && userHandle ? userHandle.trim() : null,
       songId: songId || null,
       songName: songName || null,
       songArtist: songArtist || null,

@@ -1,6 +1,9 @@
 import { Playfair_Display, Inter, Caveat } from 'next/font/google';
 import './globals.css';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import ParticleBackground from './components/ParticleBackground';
+import { WallProvider } from './components/WallContext';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -23,11 +26,11 @@ const caveat = Caveat({
 export const metadata = {
   title: 'Freedom Wall — Speak Freely, Stay Anonymous',
   description:
-    'An anonymous confession wall where you can share your thoughts, confessions, rants, and messages without revealing your identity. Add your favorite songs and connect through words.',
-  keywords: ['anonymous', 'confession', 'freedom wall', 'thoughts', 'rant', 'music'],
+    'A digital sanctuary for expression. Share your thoughts, confessions, and messages anonymously on the Freedom Wall.',
+  keywords: ['anonymous', 'freedom wall', 'thoughts', 'expression', 'sanctuary'],
   openGraph: {
-    title: 'Freedom Wall',
-    description: 'Speak freely. Stay anonymous.',
+    title: 'Freedom Wall — A Digital Sanctuary for Expression',
+    description: 'Speak freely. Stay anonymous. A living wall of thoughts.',
     type: 'website',
   },
 };
@@ -36,18 +39,19 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable} ${caveat.variable}`}>
       <body className="bg-dark-bg text-white antialiased font-body min-h-screen">
-        {/* Background effects */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/5 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/3 rounded-full blur-3xl" />
-        </div>
+        {/* Particle background */}
+        <ParticleBackground />
 
         {/* Content */}
-        <div className="relative z-10">
-          <Navbar />
-          {children}
-        </div>
+        <WallProvider>
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Navbar />
+            <div className="flex-1">
+              {children}
+            </div>
+            <Footer />
+          </div>
+        </WallProvider>
       </body>
     </html>
   );

@@ -12,6 +12,20 @@ const PostSchema = new mongoose.Schema({
     enum: ['confession', 'rant', 'thought', 'message'],
     default: 'thought',
   },
+  mood: {
+    type: String,
+    default: '💭',
+  },
+  isAnonymous: {
+    type: Boolean,
+    default: true,
+  },
+  userHandle: {
+    type: String,
+    default: null,
+    trim: true,
+    maxlength: [50, 'Handle cannot exceed 50 characters'],
+  },
   toAlias: {
     type: String,
     default: null,
@@ -68,5 +82,6 @@ PostSchema.pre('save', function (next) {
 });
 
 PostSchema.index({ createdAt: -1 });
+PostSchema.index({ mood: 1, createdAt: -1 });
 
 export default mongoose.models.Post || mongoose.model('Post', PostSchema);
