@@ -33,6 +33,9 @@ export const metadata = {
     description: 'Speak freely. Stay anonymous. A living wall of thoughts.',
     type: 'website',
   },
+  verification: {
+    google: 'L7l2uoiId-69z0GIYIMeFTwL1QQb4FmUhJUMwLjRuQU',
+  },
 };
 
 export default function RootLayout({ children }) {
