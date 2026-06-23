@@ -13,12 +13,19 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const mood = searchParams.get('mood');
+    const dateFilter = searchParams.get('dateFilter');
     const skip = (page - 1) * limit;
 
     // Build filter
     const filter = {};
     if (mood && mood !== 'all') {
       filter.mood = mood;
+    }
+    
+    if (dateFilter === 'today') {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      filter.createdAt = { $gte: startOfToday };
     }
 
     const [posts, total] = await Promise.all([

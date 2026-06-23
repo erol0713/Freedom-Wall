@@ -5,16 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import HeartBurst from './HeartBurst';
-
-const MOOD_STYLES = {
-  '🔥': { gradient: 'from-orange-500/10 to-red-500/10', border: 'border-orange-500/15', glow: 'rgba(255,100,50,0.12)' },
-  '💡': { gradient: 'from-yellow-500/10 to-amber-500/10', border: 'border-yellow-500/15', glow: 'rgba(255,230,0,0.12)' },
-  '🤔': { gradient: 'from-cyan-500/10 to-blue-500/10', border: 'border-cyan-500/15', glow: 'rgba(0,240,255,0.12)' },
-  '🌊': { gradient: 'from-blue-400/10 to-indigo-500/10', border: 'border-blue-400/15', glow: 'rgba(100,180,255,0.12)' },
-  '💕': { gradient: 'from-pink-500/10 to-rose-500/10', border: 'border-pink-500/15', glow: 'rgba(255,0,127,0.12)' },
-  '😤': { gradient: 'from-red-500/10 to-orange-600/10', border: 'border-red-500/15', glow: 'rgba(255,50,20,0.12)' },
-  '💭': { gradient: 'from-violet-500/10 to-purple-500/10', border: 'border-violet-500/15', glow: 'rgba(140,100,255,0.12)' },
-};
+import { useWall } from './WallContext';
 
 // Consistent random values per post ID
 function hashCode(str) {
@@ -28,6 +19,7 @@ function hashCode(str) {
 }
 
 export default function PostCard({ post, onLike, onDelete, index = 0 }) {
+  const { userHandle, myPostIds } = useWall();
   const [isLiking, setIsLiking] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
@@ -53,7 +45,7 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
     };
   }, [post._id, index]);
 
-  const moodStyle = MOOD_STYLES[post.mood] || MOOD_STYLES['💭'];
+  const isAuthor = (myPostIds && myPostIds.includes(post._id)) || (!post.isAnonymous && post.userHandle && post.userHandle === userHandle);
 
   const maxLength = 180;
   const isLongText = post.content.length > maxLength;
@@ -131,53 +123,63 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
         }}
         whileHover={{
           y: -6,
-          scale: 1.01,
+          scale: 1.02,
+          rotate: 0,
           transition: { duration: 0.25 },
         }}
-        className={`group relative w-full flex flex-col mb-4 sm:mb-5 rounded-2xl overflow-hidden paper-texture bg-gradient-to-br ${moodStyle.gradient} border ${moodStyle.border} transition-shadow duration-300 hover:shadow-lg`}
+        className={`group relative w-full flex flex-col mb-6 sm:mb-8 shadow-[2px_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300 hover:shadow-[4px_8px_25px_rgba(0,0,0,0.2)]`}
         style={{
+          backgroundColor: '#f4ebd0',
+          borderRadius: '4px',
           transform: `rotate(${rotation}deg)`,
-          ['--card-glow']: moodStyle.glow,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = `0 8px 32px ${moodStyle.glow}, 0 0 20px ${moodStyle.glow}`;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = '';
         }}
       >
+        {/* Paper texture overlay */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.08] z-0 mix-blend-multiply rounded-[4px]" 
+          style={{ 
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', 
+            backgroundSize: '128px 128px' 
+          }} 
+        />
+
+        {/* Pushpin */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 text-2xl drop-shadow-md z-20 pointer-events-none">
+          📍
+        </div>
+
         {/* Card content */}
-        <div className="p-5 sm:p-6 flex flex-col flex-1">
+        <div className="p-5 sm:p-6 flex flex-col flex-1 relative z-10 pt-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl">{post.mood || '💭'}</span>
+              <span className="text-2xl drop-shadow-sm">{post.mood || '💭'}</span>
               {!post.isAnonymous && post.userHandle && (
-                <span className="text-xs font-body text-white/40 bg-white/[0.04] px-2 py-0.5 rounded-full">
+                <span className="text-sm font-handwriting font-bold text-slate-700 bg-white/30 px-2 py-0.5 rounded shadow-sm border border-slate-300">
                   @{post.userHandle}
                 </span>
               )}
             </div>
-            <span className="text-[11px] font-body text-white/25 tabular-nums">
+            <span className="text-xs font-handwriting font-bold text-slate-500">
               {timeAgo}
             </span>
           </div>
 
-          {/* To/From (for old confession/message posts) */}
+          {/* To/From */}
           {(post.contentType === 'confession' || post.contentType === 'message') &&
             (post.toAlias || post.fromAlias) && (
-              <div className="mb-3 p-2.5 bg-white/[0.03] rounded-xl border border-white/[0.05] flex flex-col gap-0.5">
+              <div className="mb-4 border-b-2 border-dotted border-slate-400 pb-2 flex flex-col gap-1">
                 {post.toAlias && (
-                  <p className="text-sm font-body text-white/70">
-                    <span className="text-white/30 font-medium mr-1.5 uppercase text-[10px] tracking-wider">
+                  <p className="text-lg font-handwriting text-slate-800">
+                    <span className="text-slate-500 font-bold mr-2 uppercase text-[10px] tracking-wider">
                       To:
                     </span>
                     {post.toAlias}
                   </p>
                 )}
                 {post.fromAlias && (
-                  <p className="text-sm font-body text-white/70">
-                    <span className="text-white/30 font-medium mr-1.5 uppercase text-[10px] tracking-wider">
+                  <p className="text-lg font-handwriting text-slate-800">
+                    <span className="text-slate-500 font-bold mr-2 uppercase text-[10px] tracking-wider">
                       From:
                     </span>
                     {post.fromAlias}
@@ -187,14 +189,22 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
             )}
 
           {/* Content */}
-          <div className="flex-1 mb-4">
-            <p className="font-handwriting text-xl sm:text-2xl text-white/85 leading-relaxed whitespace-pre-wrap break-words">
+          <div className="flex-1 mb-4"
+                 style={{
+                 backgroundImage: 'linear-gradient(to bottom, transparent 31px, rgba(0, 0, 0, 0.12) 31px)',
+                 backgroundSize: '100% 32px',
+                 backgroundAttachment: 'local',
+                 backgroundPosition: '0 0',
+               }}
+          >
+            <p className="font-handwriting text-[22px] sm:text-[24px] text-slate-800 leading-relaxed whitespace-pre-wrap break-words"
+               style={{ lineHeight: '32px' }}>
               {displayText}
             </p>
             {isLongText && (
               <button
                 onClick={() => setShowFullTextModal(true)}
-                className="mt-2 text-sm font-body text-neon-cyan/70 hover:text-neon-cyan transition-colors font-medium"
+                className="mt-2 text-sm font-handwriting text-teal-600 hover:text-teal-800 transition-colors font-bold bg-white/50 px-2 py-1 rounded shadow-sm"
               >
                 Read more →
               </button>
@@ -203,21 +213,21 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
 
           {/* Song Attachment */}
           {post.songId && (
-            <div className="mb-3">
+            <div className="mb-4 border-t border-slate-300 pt-3">
               <button
                 onClick={() => setShowEmbed(!showEmbed)}
-                className="flex items-center gap-2 text-neon-cyan/60 hover:text-neon-cyan/80 transition-colors text-sm font-body"
+                className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors text-sm font-handwriting font-bold"
               >
                 {post.songCover ? (
                   <img
                     src={post.songCover}
                     alt="Cover"
-                    className="w-5 h-5 rounded shadow-sm object-cover flex-shrink-0"
+                    className="w-6 h-6 rounded shadow-sm object-cover flex-shrink-0"
                   />
                 ) : (
-                  <span className="text-base">🎵</span>
+                  <span className="text-base drop-shadow-sm">🎵</span>
                 )}
-                <span className="font-medium truncate max-w-[150px]">
+                <span className="truncate max-w-[150px]">
                   {post.songName}
                 </span>
                 <motion.svg
@@ -246,10 +256,10 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden mt-3"
                   >
-                    <div className="bg-dark-bg/40 border border-white/[0.06] rounded-xl p-3 flex items-center gap-3">
+                    <div className="bg-[#fefce8] border border-slate-300 shadow-inner rounded-xl p-3 flex items-center gap-3">
                       {post.songCover ? (
                         <div
-                          className="relative w-12 h-12 rounded-lg shadow-lg overflow-hidden group/cover cursor-pointer flex-shrink-0"
+                          className="relative w-12 h-12 rounded-lg shadow-sm overflow-hidden group/cover cursor-pointer flex-shrink-0 border border-slate-300"
                           onClick={post.songPreviewUrl ? togglePlay : undefined}
                         >
                           <img
@@ -258,7 +268,7 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                             className="w-full h-full object-cover transition-transform duration-300 group-hover/cover:scale-110"
                           />
                           {post.songPreviewUrl && (
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity duration-200">
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/cover:opacity-100 transition-opacity duration-200">
                               {isPlaying ? (
                                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
@@ -272,22 +282,22 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                           )}
                         </div>
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                          <span className="text-xl opacity-40">🎵</span>
+                        <div className="w-12 h-12 rounded-lg bg-white/50 border border-slate-200 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xl opacity-60">🎵</span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white/80 truncate">
+                        <p className="text-sm font-handwriting font-bold text-slate-800 truncate">
                           {post.songName}
                         </p>
-                        <p className="text-xs text-white/35 truncate mb-1.5">
+                        <p className="text-xs font-handwriting text-slate-500 truncate mb-1.5">
                           {post.songArtist}
                         </p>
                         {post.songPreviewUrl ? (
                           <div className="flex items-center gap-2">
                             <button
                               onClick={togglePlay}
-                              className="w-6 h-6 flex-shrink-0 rounded-full bg-neon-cyan/10 hover:bg-neon-cyan/20 text-neon-cyan flex items-center justify-center transition-colors"
+                              className="w-6 h-6 flex-shrink-0 rounded-full bg-teal-100 hover:bg-teal-200 text-teal-700 flex items-center justify-center transition-colors shadow-sm"
                             >
                               {isPlaying ? (
                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
@@ -299,9 +309,9 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                                 </svg>
                               )}
                             </button>
-                            <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 bg-slate-200 rounded-full overflow-hidden shadow-inner">
                               <motion.div
-                                className="h-full bg-neon-cyan/50"
+                                className="h-full bg-teal-400"
                                 initial={{ width: '0%' }}
                                 animate={isPlaying ? { width: '100%' } : { width: '0%' }}
                                 transition={{ duration: 30, ease: 'linear' }}
@@ -315,7 +325,7 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                             />
                           </div>
                         ) : (
-                          <p className="text-[10px] text-white/25 italic">
+                          <p className="text-[10px] font-handwriting text-slate-400 italic">
                             Preview not available
                           </p>
                         )}
@@ -328,7 +338,7 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+          <div className="flex items-center justify-between pt-3 border-t border-slate-300">
             <motion.button
               ref={likeButtonRef}
               onClick={handleLike}
@@ -339,15 +349,15 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
               <motion.span
                 animate={liked ? { scale: [1, 1.5, 1] } : {}}
                 transition={{ duration: 0.3 }}
-                className="text-lg"
+                className="text-xl drop-shadow-sm"
               >
                 {liked ? '❤️' : '🤍'}
               </motion.span>
               <span
-                className={`text-xs font-body tabular-nums transition-colors ${
+                className={`text-sm font-handwriting font-bold tabular-nums transition-colors ${
                   liked
-                    ? 'text-neon-magenta'
-                    : 'text-white/30 group-hover/like:text-white/50'
+                    ? 'text-red-500'
+                    : 'text-slate-500 group-hover/like:text-slate-800'
                 }`}
               >
                 {likeCount}
@@ -359,10 +369,10 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
               onClick={() => {
                 navigator.clipboard?.writeText(window.location.href);
               }}
-              className="text-white/20 hover:text-white/40 transition-colors"
+              className="text-slate-400 hover:text-slate-700 transition-colors"
               title="Copy link"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -373,28 +383,30 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
             </button>
 
             {/* Delete */}
-            <motion.button
-              onClick={handleDelete}
-              disabled={isDeleting}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-1 text-white/15 hover:text-red-400/70 transition-colors text-xs font-body opacity-0 group-hover:opacity-100"
-            >
-              {isDeleting ? (
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : (
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              )}
-            </motion.button>
+            {isAuthor && (
+              <motion.button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-1 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+              >
+                {isDeleting ? (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                )}
+              </motion.button>
+            )}
           </div>
         </div>
 
@@ -407,7 +419,7 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+                  className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowFullTextModal(false);
@@ -418,58 +430,80 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                     animate={{ scale: 1, y: 0 }}
                     exit={{ scale: 0.92, y: 20 }}
                     onClick={(e) => e.stopPropagation()}
-                    className={`w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-gradient-to-br ${moodStyle.gradient} bg-dark-card border ${moodStyle.border} rounded-2xl p-6 sm:p-8 shadow-2xl relative`}
-                    style={{
-                      boxShadow: `0 0 40px ${moodStyle.glow}, 0 25px 50px rgba(0,0,0,0.5)`,
-                    }}
+                    className={`w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-[#f4ebd0] rounded shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative`}
                   >
-                    <button
-                      onClick={() => setShowFullTextModal(false)}
-                      className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.05] flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.1] transition-all"
-                    >
-                      ✕
-                    </button>
+                    {/* Paper texture overlay */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none opacity-[0.08] z-0 mix-blend-multiply" 
+                      style={{ 
+                        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', 
+                        backgroundSize: '128px 128px' 
+                      }} 
+                    />
 
-                    <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/[0.06]">
-                      <span className="text-4xl">{post.mood || '💭'}</span>
-                      <div>
-                        {!post.isAnonymous && post.userHandle && (
-                          <span className="text-xs font-body text-white/40 block mb-1">
-                            @{post.userHandle}
+                    <div className="relative z-10 p-6 sm:p-10 pt-12">
+                      <div className="absolute top-2 left-1/2 -translate-x-1/2 text-3xl drop-shadow-md z-20 pointer-events-none">
+                        📍
+                      </div>
+
+                      <button
+                        onClick={() => setShowFullTextModal(false)}
+                        className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-200/50 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-300 transition-all z-20"
+                      >
+                        ✕
+                      </button>
+
+                      <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-dotted border-slate-400">
+                        <span className="text-4xl drop-shadow-sm">{post.mood || '💭'}</span>
+                        <div>
+                          {!post.isAnonymous && post.userHandle && (
+                            <span className="text-sm font-handwriting font-bold text-slate-700 bg-white/40 px-2 rounded shadow-sm border border-slate-300 block w-fit mb-1">
+                              @{post.userHandle}
+                            </span>
+                          )}
+                          <span className="text-xs font-handwriting font-bold text-slate-500">
+                            {timeAgo}
                           </span>
+                        </div>
+                      </div>
+
+                      {(post.contentType === 'confession' ||
+                        post.contentType === 'message') &&
+                        (post.toAlias || post.fromAlias) && (
+                          <div className="mb-6 p-4 bg-white/30 rounded border border-slate-300 flex flex-col gap-2 shadow-sm">
+                            {post.toAlias && (
+                              <p className="text-xl font-handwriting text-slate-800">
+                                <span className="text-slate-500 font-bold mr-2 uppercase text-xs tracking-wider">
+                                  To:
+                                </span>
+                                {post.toAlias}
+                              </p>
+                            )}
+                            {post.fromAlias && (
+                              <p className="text-xl font-handwriting text-slate-800">
+                                <span className="text-slate-500 font-bold mr-2 uppercase text-xs tracking-wider">
+                                  From:
+                                </span>
+                                {post.fromAlias}
+                              </p>
+                            )}
+                          </div>
                         )}
-                        <span className="text-xs font-body text-white/25">
-                          {timeAgo}
-                        </span>
+
+                      <div
+                        style={{
+                          backgroundImage: 'linear-gradient(to bottom, transparent 35px, rgba(0, 0, 0, 0.12) 35px)',
+                          backgroundSize: '100% 36px',
+                          backgroundAttachment: 'local',
+                          backgroundPosition: '0 0',
+                        }}
+                      >
+                        <p className="font-handwriting text-2xl sm:text-3xl text-slate-800 leading-relaxed whitespace-pre-wrap break-words"
+                           style={{ lineHeight: '36px' }}>
+                          {post.content}
+                        </p>
                       </div>
                     </div>
-
-                    {(post.contentType === 'confession' ||
-                      post.contentType === 'message') &&
-                      (post.toAlias || post.fromAlias) && (
-                        <div className="mb-6 p-4 bg-white/[0.03] rounded-xl border border-white/[0.06] flex flex-col gap-2">
-                          {post.toAlias && (
-                            <p className="text-base font-body text-white/80">
-                              <span className="text-white/35 font-medium mr-2 uppercase text-xs tracking-wider">
-                                To:
-                              </span>
-                              {post.toAlias}
-                            </p>
-                          )}
-                          {post.fromAlias && (
-                            <p className="text-base font-body text-white/80">
-                              <span className="text-white/35 font-medium mr-2 uppercase text-xs tracking-wider">
-                                From:
-                              </span>
-                              {post.fromAlias}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                    <p className="font-handwriting text-2xl sm:text-3xl text-white/85 leading-relaxed whitespace-pre-wrap break-words">
-                      {post.content}
-                    </p>
                   </motion.div>
                 </motion.div>
               )}

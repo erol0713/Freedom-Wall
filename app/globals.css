@@ -16,8 +16,10 @@
   }
 
   body {
-    background-color: #0A0A0A;
-    color: #ffffff;
+    background: linear-gradient(-45deg, #0f172a, #1e1b4b, #172554, #020617);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    color: #f8fafc;
     font-family: var(--font-body), 'Inter', system-ui, sans-serif;
     position: relative;
   }
@@ -43,9 +45,9 @@
     z-index: 0;
     pointer-events: none;
     background: 
-      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(0, 240, 255, 0.04) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(255, 0, 127, 0.03) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 50% at 50% 50%, rgba(57, 255, 20, 0.02) 0%, transparent 60%);
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(56, 189, 248, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(244, 114, 182, 0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 50% 50%, rgba(167, 139, 250, 0.15) 0%, transparent 60%);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -248,7 +250,7 @@
 
 @layer utilities {
   .text-gradient-neon {
-    background: linear-gradient(135deg, #00F0FF, #FF007F, #39FF14, #FFE600);
+    background: linear-gradient(135deg, #0ea5e9, #8b5cf6, #ec4899);
     background-size: 300% 300%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

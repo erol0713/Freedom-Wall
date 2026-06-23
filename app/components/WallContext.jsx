@@ -9,6 +9,7 @@ export function WallProvider({ children }) {
   const [userHandle, setUserHandle] = useState('');
   const [activeMood, setActiveMood] = useState('all');
   const [posts, setPosts] = useState([]);
+  const [myPostIds, setMyPostIds] = useState([]);
   const confettiRef = useRef(null);
 
   // Load persisted state from localStorage
@@ -19,6 +20,7 @@ export function WallProvider({ children }) {
         const prefs = JSON.parse(saved);
         if (typeof prefs.isAnonymous === 'boolean') setIsAnonymous(prefs.isAnonymous);
         if (prefs.userHandle) setUserHandle(prefs.userHandle);
+        if (prefs.myPostIds) setMyPostIds(prefs.myPostIds);
       }
     } catch (e) {
       // Ignore parse errors
@@ -30,7 +32,7 @@ export function WallProvider({ children }) {
     try {
       localStorage.setItem(
         'freedom-wall-prefs',
-        JSON.stringify({ isAnonymous, userHandle })
+        JSON.stringify({ isAnonymous, userHandle, myPostIds })
       );
     } catch (e) {
       // Ignore storage errors
@@ -49,6 +51,10 @@ export function WallProvider({ children }) {
 
   const addPost = useCallback((newPost) => {
     setPosts((prev) => [newPost, ...prev]);
+  }, []);
+
+  const trackPost = useCallback((postId) => {
+    setMyPostIds((prev) => [...prev, postId]);
   }, []);
 
   const removePost = useCallback((postId) => {
@@ -74,7 +80,9 @@ export function WallProvider({ children }) {
         setActiveMood,
         posts,
         setPosts,
+        myPostIds,
         addPost,
+        trackPost,
         removePost,
         updatePostLike,
         triggerConfetti,

@@ -6,7 +6,7 @@ import Masonry from 'react-masonry-css';
 import PostCard from './PostCard';
 import { useWall } from './WallContext';
 
-export default function Feed({ mood = 'all' }) {
+export default function Feed({ mood = 'all', dateFilter = 'all' }) {
   const { posts, setPosts } = useWall();
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -14,7 +14,7 @@ export default function Feed({ mood = 'all' }) {
   const [initialLoading, setInitialLoading] = useState(true);
   const observerRef = useRef(null);
   const loadMoreRef = useRef(null);
-  const currentMoodRef = useRef(mood);
+  const currentFilterRef = useRef({ mood, dateFilter });
 
   const fetchPosts = useCallback(async (pageNum, reset = false) => {
     if (loading && !reset) return;
@@ -22,7 +22,8 @@ export default function Feed({ mood = 'all' }) {
 
     try {
       const moodParam = mood !== 'all' ? `&mood=${encodeURIComponent(mood)}` : '';
-      const res = await fetch(`/api/posts?page=${pageNum}&limit=12${moodParam}`);
+      const dateParam = dateFilter !== 'all' ? `&dateFilter=${encodeURIComponent(dateFilter)}` : '';
+      const res = await fetch(`/api/posts?page=${pageNum}&limit=12${moodParam}${dateParam}`);
       const data = await res.json();
 
       if (res.ok) {
@@ -41,18 +42,18 @@ export default function Feed({ mood = 'all' }) {
       setInitialLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mood, setPosts]);
+  }, [mood, dateFilter, setPosts]);
 
-  // Initial load + mood change
+  // Initial load + filter change
   useEffect(() => {
-    if (currentMoodRef.current !== mood) {
-      currentMoodRef.current = mood;
+    if (currentFilterRef.current.mood !== mood || currentFilterRef.current.dateFilter !== dateFilter) {
+      currentFilterRef.current = { mood, dateFilter };
       setPage(1);
     }
     setInitialLoading(true);
     fetchPosts(1, true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mood]);
+  }, [mood, dateFilter]);
 
   // Infinite scroll observer
   useEffect(() => {

@@ -2,59 +2,65 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 
-const PARTICLE_COUNT = 50;
-const NEON_COLORS = [
-  'rgba(0, 240, 255, 0.35)',   // cyan
-  'rgba(255, 0, 127, 0.3)',    // magenta
-  'rgba(57, 255, 20, 0.25)',   // lime
-  'rgba(255, 230, 0, 0.25)',   // yellow
-  'rgba(0, 240, 255, 0.2)',    // cyan dim
-  'rgba(255, 0, 127, 0.15)',   // magenta dim
+const PARTICLE_COUNT = 30;
+const MESSAGING_COLORS = [
+  'rgba(56, 189, 248, 0.4)',   // light blue
+  'rgba(167, 139, 250, 0.4)',  // purple
+  'rgba(244, 114, 182, 0.4)',  // pink
+  'rgba(52, 211, 153, 0.4)',   // emerald
 ];
 
-const SHAPES = ['circle', 'circle', 'circle', 'diamond', 'triangle'];
+const SHAPES = ['bubble'];
 
 function createParticle(width, height) {
   return {
     x: Math.random() * width,
     y: Math.random() * height,
-    size: Math.random() * 3 + 1,
-    speedX: (Math.random() - 0.5) * 0.3,
-    speedY: (Math.random() - 0.5) * 0.2 - 0.1,
-    color: NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)],
+    size: Math.random() * 15 + 10,
+    speedX: (Math.random() - 0.5) * 0.8,
+    speedY: (Math.random() - 0.5) * 0.8 - 0.2,
+    color: MESSAGING_COLORS[Math.floor(Math.random() * MESSAGING_COLORS.length)],
     shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
-    opacity: Math.random() * 0.5 + 0.2,
-    pulseSpeed: Math.random() * 0.02 + 0.005,
+    opacity: Math.random() * 0.6 + 0.2,
+    pulseSpeed: Math.random() * 0.01 + 0.005,
     pulseOffset: Math.random() * Math.PI * 2,
+    isFlipped: Math.random() > 0.5,
   };
 }
 
 function drawParticle(ctx, p, time) {
-  const pulse = Math.sin(time * p.pulseSpeed + p.pulseOffset) * 0.3 + 0.7;
+  const pulse = Math.sin(time * p.pulseSpeed + p.pulseOffset) * 0.2 + 0.8;
   ctx.globalAlpha = p.opacity * pulse;
   ctx.fillStyle = p.color;
 
-  switch (p.shape) {
-    case 'diamond':
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillRect(-p.size, -p.size, p.size * 2, p.size * 2);
-      ctx.restore();
-      break;
-    case 'triangle':
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y - p.size * 1.5);
-      ctx.lineTo(p.x - p.size * 1.3, p.y + p.size);
-      ctx.lineTo(p.x + p.size * 1.3, p.y + p.size);
-      ctx.closePath();
-      ctx.fill();
-      break;
-    default:
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fill();
+  // Draw chat bubble
+  const w = p.size * 2.5;
+  const h = p.size * 1.6;
+  const r = p.size * 0.6;
+  
+  ctx.save();
+  ctx.translate(p.x, p.y);
+  if (p.isFlipped) {
+    ctx.scale(-1, 1);
   }
+
+  // Draw rounded rect (with fallback)
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(0, 0, w, h, r);
+  } else {
+    ctx.rect(0, 0, w, h);
+  }
+  ctx.fill();
+
+  // Draw tail
+  ctx.beginPath();
+  ctx.moveTo(r, h - 1);
+  ctx.lineTo(-p.size * 0.3, h + p.size * 0.5);
+  ctx.lineTo(p.size * 0.8, h - 1);
+  ctx.fill();
+  
+  ctx.restore();
 }
 
 export default function ParticleBackground() {

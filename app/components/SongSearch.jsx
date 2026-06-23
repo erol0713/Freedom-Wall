@@ -74,7 +74,7 @@ export default function SongSearch({ onSelect, selectedSong, onClear }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="flex items-center gap-3 bg-neon-cyan/[0.06] border border-neon-cyan/15 rounded-xl px-4 py-3"
+        className="flex items-center gap-3 bg-teal-50/50 border border-teal-200/60 rounded-xl px-4 py-3"
       >
         {selectedSong.album?.images?.[0] ? (
           <img src={selectedSong.album.images[0].url} alt="Cover" className="w-8 h-8 rounded-lg object-cover shadow-sm flex-shrink-0" />
@@ -82,12 +82,12 @@ export default function SongSearch({ onSelect, selectedSong, onClear }) {
           <span className="text-lg">🎵</span>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-body text-white/80 font-medium truncate">{selectedSong.name}</p>
-          <p className="text-xs font-body text-white/35 truncate">{selectedSong.artists}</p>
+          <p className="text-sm font-body text-slate-800 font-medium truncate">{selectedSong.name}</p>
+          <p className="text-xs font-body text-slate-500 truncate">{selectedSong.artists}</p>
         </div>
         <button
           onClick={handleClear}
-          className="text-white/25 hover:text-white/50 transition-colors flex-shrink-0"
+          className="text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -100,7 +100,7 @@ export default function SongSearch({ onSelect, selectedSong, onClear }) {
   return (
     <div className="relative" ref={dropdownRef}>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">🎵</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">🎵</span>
         <input
           ref={inputRef}
           type="text"
@@ -108,11 +108,11 @@ export default function SongSearch({ onSelect, selectedSong, onClear }) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setShowDropdown(true)}
           placeholder="Attach a song... (optional)"
-          className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl pl-10 pr-10 py-3 text-sm font-body text-white/80 placeholder-white/20 focus:outline-none focus:border-neon-cyan/20 focus:bg-white/[0.04] transition-all duration-300"
+          className="w-full bg-transparent border border-teal-200/60 rounded-xl pl-10 pr-10 py-3 text-sm font-body text-slate-700 placeholder-slate-300 focus:outline-none focus:border-teal-400 transition-all duration-300"
         />
         {isSearching && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-dark-border rounded-full animate-spin border-t-neon-cyan" />
+            <div className="w-4 h-4 border-2 border-slate-200 rounded-full animate-spin border-t-teal-400" />
           </div>
         )}
       </div>
@@ -125,24 +125,24 @@ export default function SongSearch({ onSelect, selectedSong, onClear }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-50 top-full mt-2 w-full glass-card-neon rounded-xl shadow-2xl overflow-hidden"
+            className="absolute z-50 top-full mt-2 w-full bg-[#fdfbf7] border border-slate-200 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] overflow-hidden"
           >
             {results.map((track) => (
               <button
                 key={track.id}
                 onClick={() => handleSelect(track)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/[0.04] transition-colors text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-black/[0.03] transition-colors text-left border-b border-slate-100 last:border-0"
               >
                 {track.album.images?.[0] && (
                   <img
                     src={track.album.images[0]?.url}
                     alt={track.name}
-                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                    className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-slate-200"
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-body text-white/80 truncate">{track.name}</p>
-                  <p className="text-xs font-body text-white/30 truncate">{track.artists}</p>
+                  <p className="text-sm font-body text-slate-800 font-medium truncate">{track.name}</p>
+                  <p className="text-xs font-body text-slate-500 truncate">{track.artists}</p>
                 </div>
               </button>
             ))}

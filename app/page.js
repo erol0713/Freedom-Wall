@@ -1,15 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Feed from './components/Feed';
-import PostForm from './components/PostForm';
-import MoodSelector from './components/MoodSelector';
+import Link from 'next/link';
 import ConfettiEffect from './components/ConfettiEffect';
 import { useWall } from './components/WallContext';
 
 export default function Home() {
-  const [activeMood, setActiveMood] = useState('all');
   const { setConfettiTrigger } = useWall();
 
   return (
@@ -34,7 +31,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
-              className="font-body text-white/35 text-sm sm:text-base max-w-md mx-auto leading-relaxed"
+              className="font-body text-slate-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed"
             >
               Speak freely. Stay anonymous. Share your thoughts
               with the world.
@@ -46,40 +43,45 @@ export default function Home() {
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="mt-6 h-px bg-gradient-to-r from-transparent via-neon-cyan/15 to-transparent"
+            className="mt-6 h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent"
           />
         </div>
       </header>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 pb-8 space-y-8">
-        {/* Post Form */}
-        <div className="max-w-2xl mx-auto">
-          <PostForm />
+        {/* Create Message Button */}
+        <div className="flex justify-center -mt-4 mb-4">
+          <Link href="/create">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="neon-button py-3 px-8 rounded-full font-body font-semibold text-sm tracking-wide flex items-center gap-2 cursor-pointer"
+            >
+              <span>✍️</span>
+              <span>Create Message</span>
+            </motion.div>
+          </Link>
         </div>
 
-        {/* Mood Filter + Section Header */}
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
-          className="space-y-4"
+          className="mb-8"
         >
           <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-gradient-to-r from-dark-border to-transparent" />
-            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-white/20">
-              The Wall
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-600 to-transparent" />
+            <span className="font-body text-[10px] uppercase tracking-[0.2em] text-slate-400 font-semibold">
+              Today's Wall
             </span>
-            <div className="h-px flex-1 bg-gradient-to-l from-dark-border to-transparent" />
-          </div>
-
-          <div className="flex justify-center">
-            <MoodSelector value={activeMood} onChange={setActiveMood} mode="filter" />
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-600 to-transparent" />
           </div>
         </motion.div>
 
         {/* Feed */}
-        <Feed mood={activeMood} />
+        <Feed dateFilter="today" />
       </div>
     </main>
   );
