@@ -135,12 +135,12 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
         }}
       >
         {/* Paper texture overlay */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.08] z-0 mix-blend-multiply rounded-[4px]" 
-          style={{ 
-            backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', 
-            backgroundSize: '128px 128px' 
-          }} 
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.08] z-0 mix-blend-multiply rounded-[4px]"
+          style={{
+            backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+            backgroundSize: '128px 128px'
+          }}
         />
 
         {/* Pushpin */}
@@ -190,15 +190,21 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
 
           {/* Content */}
           <div className="flex-1 mb-4"
-                 style={{
-                 backgroundImage: 'linear-gradient(to bottom, transparent 31px, rgba(0, 0, 0, 0.12) 31px)',
-                 backgroundSize: '100% 32px',
-                 backgroundAttachment: 'local',
-                 backgroundPosition: '0 0',
-               }}
+            style={{
+              backgroundImage: `
+                   repeating-linear-gradient(
+                     transparent,
+                     transparent 31px,
+                     rgba(0, 0, 0, 0.12) 31px,
+                     rgba(0, 0, 0, 0.12) 32px
+                   )
+                 `,
+              backgroundAttachment: 'local',
+              backgroundPosition: '0 4px',
+            }}
           >
             <p className="font-handwriting text-[22px] sm:text-[24px] text-slate-800 leading-relaxed whitespace-pre-wrap break-words"
-               style={{ lineHeight: '32px' }}>
+              style={{ lineHeight: '32px' }}>
               {displayText}
             </p>
             {isLongText && (
@@ -354,11 +360,10 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                 {liked ? '❤️' : '🤍'}
               </motion.span>
               <span
-                className={`text-sm font-handwriting font-bold tabular-nums transition-colors ${
-                  liked
+                className={`text-sm font-handwriting font-bold tabular-nums transition-colors ${liked
                     ? 'text-red-500'
                     : 'text-slate-500 group-hover/like:text-slate-800'
-                }`}
+                  }`}
               >
                 {likeCount}
               </span>
@@ -433,12 +438,12 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                     className={`w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-[#f4ebd0] rounded shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative`}
                   >
                     {/* Paper texture overlay */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none opacity-[0.08] z-0 mix-blend-multiply" 
-                      style={{ 
-                        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', 
-                        backgroundSize: '128px 128px' 
-                      }} 
+                    <div
+                      className="absolute inset-0 pointer-events-none opacity-[0.08] z-0 mix-blend-multiply"
+                      style={{
+                        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+                        backgroundSize: '128px 128px'
+                      }}
                     />
 
                     <div className="relative z-10 p-6 sm:p-10 pt-12">
@@ -499,7 +504,7 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
                         }}
                       >
                         <p className="font-handwriting text-2xl sm:text-3xl text-slate-800 leading-relaxed whitespace-pre-wrap break-words"
-                           style={{ lineHeight: '36px' }}>
+                          style={{ lineHeight: '36px' }}>
                           {post.content}
                         </p>
                       </div>

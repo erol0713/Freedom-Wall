@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ParticleBackground from './components/ParticleBackground';
 import { WallProvider } from './components/WallContext';
+import VisitorTracker from './components/VisitorTracker';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -42,6 +43,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable} ${caveat.variable}`}>
       <body className="bg-dark-bg text-white antialiased font-body min-h-screen">
+        {/* Silent visitor tracking */}
+        <VisitorTracker />
+
         {/* Particle background */}
         <ParticleBackground />
 
