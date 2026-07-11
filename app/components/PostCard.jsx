@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionTemplate } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 import HeartBurst from './HeartBurst';
 import { useWall } from './WallContext';
+import { useMouseTilt } from './animations/useMouseTilt';
 
 // Consistent random values per post ID
 function hashCode(str) {
@@ -25,13 +26,19 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
   const [showEmbed, setShowEmbed] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
-  const [showFullTextModal, setShowFullTextModal] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const likeButtonRef = useRef(null);
   const heartBurst = HeartBurst({ originRef: likeButtonRef });
+
+  // 3D Tilt Effect Tracking
+  const { rotateX, rotateY, mouseX, mouseY, handleMouseMove, handleMouseLeave, isTouch } = useMouseTilt(12);
+
+  // Dynamic Glare
+  const glareBackground = useMotionTemplate`radial-gradient(circle 250px at ${mouseX}px ${mouseY}px, rgba(255,255,255,0.4), transparent 80%)`;
 
   useEffect(() => setMounted(true), []);
 
@@ -112,26 +119,31 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
       {heartBurst.element}
       <motion.div
         layout
-        initial={{ opacity: 0, y: -30, scale: 0.92, rotate: rotation * 3 }}
-        animate={{ opacity: 1, y: 0, scale: 1, rotate: rotation }}
-        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+        initial={{ opacity: 0, y: 60, scale: 0.85, rotateX: 45, rotateY: 15, rotateZ: rotation * 2 }}
+        animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0, rotateY: 0, rotateZ: rotation }}
+        exit={{ opacity: 0, y: -40, scale: 0.9, rotateX: -20, opacity: 0 }}
         transition={{
           type: 'spring',
-          stiffness: 350,
+          stiffness: 250,
           damping: 25,
           delay: entryDelay,
         }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         whileHover={{
-          y: -6,
-          scale: 1.02,
-          rotate: 0,
-          transition: { duration: 0.25 },
+          scale: 1.03,
+          zIndex: 50,
+          transition: { duration: 0.2 },
         }}
-        className={`group relative w-full flex flex-col mb-6 sm:mb-8 shadow-[2px_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300 hover:shadow-[4px_8px_25px_rgba(0,0,0,0.2)]`}
+        whileTap={{ scale: 0.98 }}
+        className={`group relative w-full flex flex-col mb-6 sm:mb-8 shadow-[2px_4px_12px_rgba(0,0,0,0.15)] transition-shadow duration-300 hover:shadow-[10px_20px_40px_rgba(0,0,0,0.3)]`}
         style={{
           backgroundColor: '#f4ebd0',
-          borderRadius: '4px',
-          transform: `rotate(${rotation}deg)`,
+          borderRadius: '6px',
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+          perspective: 1200,
         }}
       >
         {/* Paper texture overlay */}
@@ -143,14 +155,32 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
           }}
         />
 
+        {/* Dynamic Glare Overlay */}
+        {!isTouch && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none z-[60] rounded-[6px]"
+            style={{
+              background: glareBackground,
+              mixBlendMode: 'overlay',
+            }}
+          />
+        )}
+
         {/* Pushpin */}
         <div className="absolute top-2 left-1/2 -translate-x-1/2 text-2xl drop-shadow-md z-20 pointer-events-none">
           📍
         </div>
 
         {/* Card content */}
-        <div className="p-5 sm:p-6 flex flex-col flex-1 relative z-10 pt-8">
-          {/* Header */}
+        <motion.div
+          className="relative flex-1 flex flex-col"
+          animate={{ rotateY: isFlipped ? 180 : 0 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          {/* FRONT */}
+          <div className="p-5 sm:p-6 flex flex-col flex-1 relative z-10 pt-8" style={{ backfaceVisibility: 'hidden' }}>
+            {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <span className="text-2xl drop-shadow-sm">{post.mood || '💭'}</span>
@@ -209,7 +239,7 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
             </p>
             {isLongText && (
               <button
-                onClick={() => setShowFullTextModal(true)}
+                onClick={() => setIsFlipped(true)}
                 className="mt-2 text-sm font-handwriting text-teal-600 hover:text-teal-800 transition-colors font-bold bg-white/50 px-2 py-1 rounded shadow-sm"
               >
                 Read more →
@@ -414,108 +444,39 @@ export default function PostCard({ post, onLike, onDelete, index = 0 }) {
             )}
           </div>
         </div>
-
-        {/* Full Text Modal */}
-        {mounted &&
-          createPortal(
-            <AnimatePresence>
-              {showFullTextModal && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowFullTextModal(false);
-                  }}
-                >
-                  <motion.div
-                    initial={{ scale: 0.92, y: 20 }}
-                    animate={{ scale: 1, y: 0 }}
-                    exit={{ scale: 0.92, y: 20 }}
-                    onClick={(e) => e.stopPropagation()}
-                    className={`w-full max-w-2xl max-h-[85vh] overflow-y-auto bg-[#f4ebd0] rounded shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative`}
-                  >
-                    {/* Paper texture overlay */}
-                    <div
-                      className="absolute inset-0 pointer-events-none opacity-[0.08] z-0 mix-blend-multiply"
-                      style={{
-                        backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
-                        backgroundSize: '128px 128px'
-                      }}
-                    />
-
-                    <div className="relative z-10 p-6 sm:p-10 pt-12">
-                      <div className="absolute top-2 left-1/2 -translate-x-1/2 text-3xl drop-shadow-md z-20 pointer-events-none">
-                        📍
-                      </div>
-
-                      <button
-                        onClick={() => setShowFullTextModal(false)}
-                        className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-200/50 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-300 transition-all z-20"
-                      >
-                        ✕
-                      </button>
-
-                      <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-dotted border-slate-400">
-                        <span className="text-4xl drop-shadow-sm">{post.mood || '💭'}</span>
-                        <div>
-                          {!post.isAnonymous && post.userHandle && (
-                            <span className="text-sm font-handwriting font-bold text-slate-700 bg-white/40 px-2 rounded shadow-sm border border-slate-300 block w-fit mb-1">
-                              @{post.userHandle}
-                            </span>
-                          )}
-                          <span className="text-xs font-handwriting font-bold text-slate-500">
-                            {timeAgo}
-                          </span>
-                        </div>
-                      </div>
-
-                      {(post.contentType === 'confession' ||
-                        post.contentType === 'message') &&
-                        (post.toAlias || post.fromAlias) && (
-                          <div className="mb-6 p-4 bg-white/30 rounded border border-slate-300 flex flex-col gap-2 shadow-sm">
-                            {post.toAlias && (
-                              <p className="text-xl font-handwriting text-slate-800">
-                                <span className="text-slate-500 font-bold mr-2 uppercase text-xs tracking-wider">
-                                  To:
-                                </span>
-                                {post.toAlias}
-                              </p>
-                            )}
-                            {post.fromAlias && (
-                              <p className="text-xl font-handwriting text-slate-800">
-                                <span className="text-slate-500 font-bold mr-2 uppercase text-xs tracking-wider">
-                                  From:
-                                </span>
-                                {post.fromAlias}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                      <div
-                        style={{
-                          backgroundImage: 'linear-gradient(to bottom, transparent 35px, rgba(0, 0, 0, 0.12) 35px)',
-                          backgroundSize: '100% 36px',
-                          backgroundAttachment: 'local',
-                          backgroundPosition: '0 0',
-                        }}
-                      >
-                        <p className="font-handwriting text-2xl sm:text-3xl text-slate-800 leading-relaxed whitespace-pre-wrap break-words"
-                          style={{ lineHeight: '36px' }}>
-                          {post.content}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>,
-            document.body
-          )}
+          
+          {/* BACK */}
+          <div
+            className="absolute inset-0 p-5 sm:p-6 flex flex-col z-20 overflow-y-auto overscroll-contain"
+            style={{
+              backfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
+              backgroundColor: '#f4ebd0',
+              borderRadius: '6px'
+            }}
+          >
+            <div className="flex justify-between items-center mb-4 sticky top-0 bg-[#f4ebd0]/90 backdrop-blur pb-2 z-30">
+              <span className="font-handwriting font-bold text-slate-500 text-sm tracking-wider uppercase">
+                Full Confession
+              </span>
+              <button
+                onClick={() => setIsFlipped(false)}
+                className="text-xl hover:scale-110 transition-transform hover:rotate-[-10deg]"
+                title="Flip Back"
+              >
+                ↩️
+              </button>
+            </div>
+            <p
+              className="font-handwriting text-[22px] sm:text-[24px] text-slate-800 leading-relaxed whitespace-pre-wrap break-words pb-4"
+              style={{ lineHeight: '32px' }}
+            >
+              {post.content}
+            </p>
+          </div>
+        </motion.div>
       </motion.div>
     </>
   );
 }
+

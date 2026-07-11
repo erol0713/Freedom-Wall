@@ -8,7 +8,13 @@ export default function Navbar() {
   const { isAnonymous, setIsAnonymous, userHandle, setUserHandle } = useWall();
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-slate-900/60 backdrop-blur-xl border-b border-white/10 shadow-sm">
+    <motion.nav
+      initial={{ y: -100, rotateX: -90, opacity: 0 }}
+      animate={{ y: 0, rotateX: 0, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 150, damping: 20, delay: 0.1 }}
+      style={{ transformOrigin: "top center", transformStyle: "preserve-3d", perspective: 1000 }}
+      className="sticky top-0 z-50 w-full bg-slate-900/60 backdrop-blur-xl border-b border-white/10 shadow-sm"
+    >
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -33,6 +39,6 @@ export default function Navbar() {
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

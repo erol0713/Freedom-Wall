@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import ScrollReveal from './animations/ScrollReveal';
 
 const QUOTES = [
   { text: "If freedom of speech is taken away, then dumb and silent we may be led, like sheep to the slaughter.", author: "George Washington" },
@@ -25,28 +26,27 @@ export default function Footer() {
     <footer className="relative z-10 border-t border-white/[0.04] mt-16">
       <div className="max-w-4xl mx-auto px-6 py-12 text-center">
         {/* Quote */}
-        <motion.blockquote
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-6"
-        >
-          <p className="font-handwriting text-xl sm:text-2xl text-white/30 leading-relaxed italic mb-3">
-            &ldquo;{quote.text}&rdquo;
-          </p>
-          <cite className="font-body text-xs text-white/20 uppercase tracking-widest not-italic">
-            — {quote.author}
-          </cite>
-        </motion.blockquote>
+        <ScrollReveal delay={0.1} direction="up" distance={20} className="mb-6">
+          <blockquote className="m-0">
+            <p className="font-handwriting text-xl sm:text-2xl text-white/30 leading-relaxed italic mb-3">
+              &ldquo;{quote.text}&rdquo;
+            </p>
+            <cite className="font-body text-xs text-white/20 uppercase tracking-widest not-italic">
+              — {quote.author}
+            </cite>
+          </blockquote>
+        </ScrollReveal>
 
         {/* Divider */}
         <div className="h-px w-24 mx-auto bg-gradient-to-r from-transparent via-neon-cyan/20 to-transparent mb-6" />
 
         {/* Attribution */}
-        <p className="font-body text-xs text-white/15">
+        <motion.p 
+          whileHover={{ scale: 1.05 }}
+          className="font-body text-xs text-white/15 cursor-default inline-block"
+        >
           Made with <span className="text-neon-magenta/40">❤</span> — A sanctuary for free expression
-        </p>
+        </motion.p>
       </div>
     </footer>
   );

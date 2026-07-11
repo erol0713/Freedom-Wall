@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useWall } from './WallContext';
 import SongSearch from './SongSearch';
+import { useMouseTilt } from './animations/useMouseTilt';
 
 const MAX_CHARS = 2000;
 
@@ -19,6 +20,8 @@ export default function PostForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+
+  const { rotateX, rotateY, handleMouseMove, handleMouseLeave } = useMouseTilt(5);
 
   const charCount = content.length;
   const charPercent = (charCount / MAX_CHARS) * 100;
@@ -84,14 +87,20 @@ export default function PostForm() {
   return (
     <motion.form
       onSubmit={handleSubmit}
-      initial={{ opacity: 0, y: -20, rotate: -1 }}
-      animate={{ opacity: 1, y: 0, rotate: -0.5 }}
-      whileHover={{ rotate: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className={`relative p-6 sm:p-10 pt-10 transition-all duration-500 max-w-2xl mx-auto shadow-[0_20px_50px_rgba(0,0,0,0.5)]`}
+      initial={{ opacity: 0, y: 50, scale: 0.95, rotateX: 30 }}
+      animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+      whileHover={{ scale: 1.01, y: -4, transition: { duration: 0.2 } }}
+      transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.3 }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`relative p-6 sm:p-10 pt-10 transition-all duration-500 max-w-2xl mx-auto shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isFocused ? 'shadow-[0_30px_70px_rgba(20,184,166,0.3)]' : ''}`}
       style={{
         backgroundColor: '#f4ebd0', // Old bond paper look
-        borderRadius: '4px',
+        borderRadius: '6px',
+        rotateX,
+        rotateY,
+        transformStyle: 'preserve-3d',
+        perspective: 1200,
       }}
     >
       {/* Paper texture overlay */}

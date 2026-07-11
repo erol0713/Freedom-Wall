@@ -5,6 +5,11 @@ import Footer from './components/Footer';
 import ParticleBackground from './components/ParticleBackground';
 import { WallProvider } from './components/WallContext';
 import VisitorTracker from './components/VisitorTracker';
+import dynamic from 'next/dynamic';
+
+const FloatingShapes = dynamic(() => import('./components/FloatingShapes'), {
+  ssr: false,
+});
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -45,6 +50,9 @@ export default function RootLayout({ children }) {
       <body className="bg-dark-bg text-white antialiased font-body min-h-screen">
         {/* Silent visitor tracking */}
         <VisitorTracker />
+
+        {/* Floating 3D Shapes (Lazy Loaded) */}
+        <FloatingShapes />
 
         {/* Particle background */}
         <ParticleBackground />

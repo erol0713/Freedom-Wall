@@ -67,6 +67,7 @@ export default function ParticleBackground() {
   const canvasRef = useRef(null);
   const particlesRef = useRef([]);
   const mouseRef = useRef({ x: 0, y: 0 });
+  const scrollRef = useRef(0);
   const animFrameRef = useRef(null);
 
   const handleMouseMove = useCallback((e) => {
@@ -74,6 +75,10 @@ export default function ParticleBackground() {
       x: (e.clientX / window.innerWidth - 0.5) * 2,
       y: (e.clientY / window.innerHeight - 0.5) * 2,
     };
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    scrollRef.current = window.scrollY;
   }, []);
 
   useEffect(() => {
@@ -94,6 +99,7 @@ export default function ParticleBackground() {
     resize();
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     // Init particles
     particlesRef.current = Array.from({ length: PARTICLE_COUNT }, () =>
@@ -107,23 +113,30 @@ export default function ParticleBackground() {
 
       const mx = mouseRef.current.x;
       const my = mouseRef.current.y;
+      const sy = scrollRef.current;
 
       for (const p of particlesRef.current) {
         // Parallax offset based on mouse
         const parallaxX = mx * p.size * -3;
         const parallaxY = my * p.size * -3;
+        
+        // Multi-layer scroll parallax (larger = faster = closer)
+        const scrollParallaxY = sy * (p.size * 0.03);
 
         p.x += p.speedX;
         p.y += p.speedY;
 
-        // Wrap around
-        if (p.x < -20) p.x = width + 20;
-        if (p.x > width + 20) p.x = -20;
-        if (p.y < -20) p.y = height + 20;
-        if (p.y > height + 20) p.y = -20;
+        // Wrap around base coordinates
+        if (p.x < -100) p.x = width + 100;
+        if (p.x > width + 100) p.x = -100;
+        if (p.y < -100) p.y = height + 100;
+        if (p.y > height + 100) p.y = -100;
 
-        const drawX = p.x + parallaxX;
-        const drawY = p.y + parallaxY;
+        let drawX = p.x + parallaxX;
+        let drawY = p.y + parallaxY - scrollParallaxY;
+
+        // Wrap around drawing coordinates so they don't vanish on scroll
+        drawY = ((drawY % height) + height) % height;
 
         const saved = { x: p.x, y: p.y };
         p.x = drawX;
@@ -141,6 +154,7 @@ export default function ParticleBackground() {
     return () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('scroll', handleScroll);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     };
   }, [handleMouseMove]);
